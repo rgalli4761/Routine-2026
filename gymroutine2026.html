@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Return to Form — Recomp Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0d12;
+    --surface: #14161e;
+    --card: #191c27;
+    --card-hover: #1e2130;
+    --border: #262a38;
+    --accent: #d4a843;
+    --accent-dim: #8f7530;
+    --accent-bg: rgba(212,168,67,0.08);
+    --text: #e5e3dc;
+    --dim: #8e909a;
+    --muted: #555760;
+    --green: #5aad72;
+    --blue: #5a8ead;
+    --red: #c45c5c;
+    --orange: #d48a43;
+    --mono: 'JetBrains Mono','SF Mono','Fira Code',monospace;
+    --sans: 'Inter',-apple-system,'Segoe UI',sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); padding: 20px 14px; min-height: 100vh; }
+  .container { max-width: 700px; margin: 0 auto; }
+
+  /* Header */
+  .header-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 8px; vertical-align: middle; }
+  .header-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 4px 0; }
+  .subtitle { font-size: 12.5px; color: var(--dim); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; margin: 24px 0 18px; flex-wrap: wrap; }
+  .tab-btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-family: var(--sans); font-size: 13px; font-weight: 500; transition: all 0.15s; background: var(--card); color: var(--dim); }
+  .tab-btn.active { background: var(--accent); color: var(--bg); }
+
+  /* Phase toggle */
+  .phase-toggle { display: flex; gap: 6px; margin-bottom: 16px; background: var(--surface); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+  .phase-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-family: var(--sans); font-size: 12.5px; font-weight: 500; transition: all 0.15s; background: transparent; color: var(--dim); }
+  .phase-btn.active { background: var(--accent); color: var(--bg); }
+  .phase-btn small { display: block; font-size: 10px; margin-top: 2px; opacity: 0.7; }
+
+  /* Cards */
+  .info-box { padding: 12px 16px; margin-bottom: 16px; border-radius: 8px; background: var(--card); border-left: 3px solid var(--accent-dim); font-size: 12.5px; color: var(--dim); line-height: 1.7; }
+  .day-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 10px; }
+  .day-header { padding: 14px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.12s; }
+  .day-header:hover { background: var(--card-hover); }
+  .day-header.open { background: var(--card-hover); }
+  .day-title { font-weight: 600; font-size: 14px; }
+  .day-tag { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .day-chevron { color: var(--accent); font-size: 15px; transition: transform 0.2s; }
+  .day-chevron.open { transform: rotate(180deg); }
+  .day-body { display: none; }
+  .day-body.open { display: block; }
+
+  /* Exercise rows */
+  .ex-row { padding: 11px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+  .ex-row:hover { background: var(--card-hover); }
+  .ex-row.open { background: var(--card-hover); }
+  .ex-main { display: flex; justify-content: space-between; align-items: center; }
+  .ex-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+  .ex-num { color: var(--muted); font-family: var(--mono); font-size: 10px; width: 16px; }
+  .ex-name { font-size: 13.5px; font-weight: 500; }
+  .ex-right { display: flex; gap: 14px; align-items: center; }
+  .tag { padding: 2px 10px; border-radius: 4px; font-size: 11px; font-family: var(--mono); font-weight: 500; }
+  .tag-accent { background: rgba(212,168,67,0.1); color: var(--accent); }
+  .tag-green { background: rgba(90,173,114,0.1); color: var(--green); }
+  .tag-blue { background: rgba(90,142,173,0.1); color: var(--blue); }
+  .ex-rest { font-size: 11px; color: var(--muted); font-family: var(--mono); width: 34px; text-align: right; }
+  .ex-note { display: none; margin: 9px 0 0 28px; padding: 9px 14px; background: var(--bg); border-radius: 5px; border-left: 2px solid var(--accent-dim); font-size: 12.5px; color: var(--dim); line-height: 1.6; }
+  .ex-note.open { display: block; }
+
+  /* Meal cards */
+  .meal-card { background: var(--card); border-radius: 8px; border: 1px solid var(--border); padding: 12px 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.12s; }
+  .meal-card:hover, .meal-card.open { background: var(--card-hover); }
+  .meal-main { display: flex; justify-content: space-between; align-items: center; }
+  .meal-name { font-size: 13.5px; font-weight: 500; }
+  .meal-detail { display: none; margin-top: 10px; font-size: 12.5px; line-height: 1.7; }
+  .meal-detail.open { display: block; }
+  .meal-desc { color: var(--dim); margin-bottom: 6px; }
+  .meal-sauce { color: var(--accent); font-family: var(--mono); font-size: 11.5px; }
+
+  /* Section headers */
+  .section-header { margin: 24px 0 14px; }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .section-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 8px; }
+  .timeline-item { margin-bottom: 20px; position: relative; }
+  .timeline-dot { position: absolute; left: -27px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); background: var(--card); }
+  .timeline-dot.active { background: var(--accent); border-color: var(--accent); }
+  .timeline-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .timeline-dates { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-bottom: 6px; }
+  .timeline-goal { font-size: 12.5px; color: var(--dim); line-height: 1.6; margin-bottom: 4px; }
+
+  /* Milestone rows */
+  .milestone { display: flex; gap: 14px; padding: 10px 16px; margin-bottom: 6px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); align-items: center; }
+  .milestone-week { font-family: var(--mono); font-size: 11px; color: var(--accent); width: 80px; flex-shrink: 0; }
+  .milestone-event { font-size: 13px; color: var(--dim); }
+
+  /* List items */
+  .list-item { display: flex; gap: 12px; padding: 14px 16px; margin-bottom: 8px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--dim); line-height: 1.7; align-items: flex-start; }
+  .list-num { font-family: var(--mono); font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+  .list-num-accent { color: var(--accent); }
+  .list-num-green { color: var(--green); }
+
+  /* Targets box */
+  .targets-box { padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; background: var(--card); border: 1px solid var(--border); }
+  .targets-title { font-weight: 600; font-size: 13px; color: var(--accent); margin-bottom: 10px; }
+  .targets-body { font-size: 12.5px; color: var(--dim); line-height: 1.8; }
+  .targets-label { color: var(--text); font-weight: 500; }
+  .targets-label-green { color: var(--green); font-weight: 500; }
+  .targets-breakdown { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* Timing box */
+  .timing-box { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; background: var(--accent-bg); border: 1px solid rgba(143,117,48,0.19); font-size: 12px; color: var(--dim); line-height: 1.8; }
+  .timing-label { color: var(--accent); font-weight: 600; font-size: 11px; }
+
+  /* Weekly layout */
+  .weekly-box { margin-top: 16px; padding: 12px 16px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+  .weekly-label { color: var(--accent); font-weight: 600; font-size: 11px; }
+
+  /* Footer */
+  .footer { margin-top: 28px; margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; background: var(--card); border-left: 3px solid var(--red); font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .footer-label { color: var(--red); font-weight: 600; }
+
+  /* Tab content */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div style="margin-bottom:24px">
+    <div><span class="header-dot"></span><span class="header-label">Recomp Protocol v2</span></div>
+    <h1>Return to Form</h1>
+    <p class="subtitle">4-day Upper/Lower · 60-min lunch sessions · Aesthetics priority · Start June 15, 2026</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('timeline')">Timeline</button>
+    <button class="tab-btn" onclick="switchTab('training')">Training</button>
+    <button class="tab-btn" onclick="switchTab('meals')">Meals</button>
+    <button class="tab-btn" onclick="switchTab('prep')">Prep Tips</button>
+  </div>
+
+  <!-- ═══ TIMELINE ═══ -->
+  <div id="tab-timeline" class="tab-content active">
+    <div class="section-header"><div class="section-title">Phase Roadmap</div><div class="section-sub">80kg · 24% BF → 71kg · 12% BF · ~24 weeks</div></div>
+    <div class="timeline">
+      <div class="timeline-item"><div class="timeline-dot active"></div><div class="timeline-name">Phase 1 — Neural Reactivation</div><div class="timeline-dates">Jun 15 – Jul 12 · Weeks 1–4</div><div class="timeline-goal">Rebuild motor patterns, joint conditioning, moderate loads. RPE 6–7.</div><span class="tag tag-blue">~78kg · ~22% BF</span></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-name">Phase 2 — Progressive Overload</div><div class="timeline-dates">Jul 13 – Sep 6 · Weeks 5–12</div><div class="timeline-goal">Add weight weekly on compounds. Drop sets on isolation. This is where muscle memory pays off.</div><span class="tag tag-blue">~76kg · ~17–19% BF</span></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-name">Phase 3 — Cut</div><div class="timeline-dates">Sep 7 – Nov 1 · Weeks 13–20</div><div class="timeline-goal">400–500 kcal deficit. Preserve muscle, strip fat. Tighter tracking required. One high-carb refeed day per week at maintenance to manage leptin and adherence.</div><span class="tag tag-blue">~72kg · ~13–14% BF</span></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-name">Phase 4 — Deep Cut (Optional)</div><div class="timeline-dates">Nov 2 – Nov 29 · Weeks 21–24</div><div class="timeline-goal">Push to 12% if desired. Harder, slower, requires discipline.</div><span class="tag tag-blue">~71kg · ~12% BF</span></div>
+    </div>
+
+    <div class="section-header"><div class="section-title">Key Milestones</div></div>
+    <div class="milestone"><span class="milestone-week">Week 4–6</span><span class="milestone-event">Shirts fit better through midsection</span></div>
+    <div class="milestone"><span class="milestone-week">Week 8–10</span><span class="milestone-event">Old jeans & trousers wearable again</span></div>
+    <div class="milestone"><span class="milestone-week">Week 12</span><span class="milestone-event">Recomp complete — visible muscle, face leaned out</span></div>
+    <div class="milestone"><span class="milestone-week">Week 16–18</span><span class="milestone-event">Upper abs clearly visible</span></div>
+    <div class="milestone"><span class="milestone-week">Week 20–24</span><span class="milestone-event">12% BF — full ab definition, dramatic visual change</span></div>
+  </div>
+
+  <!-- ═══ TRAINING ═══ -->
+  <div id="tab-training" class="tab-content">
+    <div class="phase-toggle">
+      <button class="phase-btn active" id="phase1-btn" onclick="switchPhase('phase1')">Phase 1<small>Weeks 1–4</small></button>
+      <button class="phase-btn" id="phase2-btn" onclick="switchPhase('phase2')">Phase 2<small>Weeks 5–12</small></button>
+    </div>
+
+    <!-- Phase 1 -->
+    <div id="phase-phase1" class="phase-content">
+      <div class="info-box">Movement quality over weight. Your joints need 4 weeks to readapt even though your muscles will feel ready sooner. Strict 60-min sessions — warm up fast (5 min), train for 50 min, leave.</div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Mon — Upper A (Push Focus)</div><div class="day-tag">Chest · Shoulders · Triceps</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Flat Barbell Bench Press</span></div><div class="ex-right"><span class="tag tag-accent">3×10–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Start at 60% of your old working weight. RPE 6–7. Rebuild the groove.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Incline DB Press</span></div><div class="ex-right"><span class="tag tag-accent">3×12</span><span class="ex-rest">75s</span></div></div><div class="ex-note">30° incline. Squeeze at top.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Cable Lateral Raises</span></div><div class="ex-right"><span class="tag tag-accent">3×15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Slow eccentric, no momentum.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Overhead Tricep Cable Extension</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Full stretch at bottom.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Face Pulls</span></div><div class="ex-right"><span class="tag tag-accent">2×15–20</span><span class="ex-rest">45s</span></div></div><div class="ex-note">External rotation at top. Non-negotiable shoulder health.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Tue — Lower A (Quad Focus)</div><div class="day-tag">Quads · Glutes · Calves</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Barbell Back Squat</span></div><div class="ex-right"><span class="tag tag-accent">3×10</span><span class="ex-rest">120s</span></div></div><div class="ex-note">Depth over weight. Rebuild mobility.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Leg Press</span></div><div class="ex-right"><span class="tag tag-accent">3×12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Controlled eccentric, full range.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Walking Lunges</span></div><div class="ex-right"><span class="tag tag-accent">3×10/leg</span><span class="ex-rest">75s</span></div></div><div class="ex-note">Bodyweight or light DBs.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Leg Extension</span></div><div class="ex-right"><span class="tag tag-accent">3×15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">2s squeeze at top.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Standing Calf Raises</span></div><div class="ex-right"><span class="tag tag-accent">4×15</span><span class="ex-rest">45s</span></div></div><div class="ex-note">Full stretch at bottom, pause.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Thu — Upper B (Pull Focus)</div><div class="day-tag">Back · Biceps · Rear Delts</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Pull-Ups or Lat Pulldown</span></div><div class="ex-right"><span class="tag tag-accent">3×8–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Pull-ups if you can get 8+. Otherwise pulldown.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Seated Cable Row</span></div><div class="ex-right"><span class="tag tag-accent">3×12</span><span class="ex-rest">75s</span></div></div><div class="ex-note">Chest up, squeeze scapulae.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Single-Arm DB Row</span></div><div class="ex-right"><span class="tag tag-accent">3×10/arm</span><span class="ex-rest">60s</span></div></div><div class="ex-note">No body english.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Incline DB Curl</span></div><div class="ex-right"><span class="tag tag-accent">3×12</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Full stretch at bottom.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Rear Delt Fly (Cable or DB)</span></div><div class="ex-right"><span class="tag tag-accent">3×15</span><span class="ex-rest">45s</span></div></div><div class="ex-note">Light, feel the contraction.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Fri — Lower B (Posterior Chain)</div><div class="day-tag">Hamstrings · Glutes · Core</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Romanian Deadlift</span></div><div class="ex-right"><span class="tag tag-accent">3×10</span><span class="ex-rest">120s</span></div></div><div class="ex-note">Light to moderate. Feel the hamstring stretch.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Hip Thrust</span></div><div class="ex-right"><span class="tag tag-accent">3×12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Pause at top, posterior pelvic tilt.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Lying Leg Curl</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Slow eccentric.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Bulgarian Split Squat</span></div><div class="ex-right"><span class="tag tag-accent">3×10/leg</span><span class="ex-rest">75s</span></div></div><div class="ex-note">DB or bodyweight.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Hanging Leg Raises</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">45s</span></div></div><div class="ex-note">Home bar. Control the swing.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div id="phase-phase2" class="phase-content" style="display:none">
+      <div class="info-box">Now push. Add 2.5kg/week on compounds when you hit the top of the rep range. Drop sets on isolation. Accessories are superseted to stay within 60 min — pairs marked with ⟷ are done back-to-back with no rest between, then rest after the pair.</div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Mon — Upper A (Push Strength + Hypertrophy)</div><div class="day-tag">Chest · Shoulders · Triceps</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Flat Barbell Bench Press</span></div><div class="ex-right"><span class="tag tag-accent">4×6–8</span><span class="ex-rest">120s</span></div></div><div class="ex-note">RPE 7–8. Add 2.5kg when you hit 8 on all sets.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Incline DB Press</span></div><div class="ex-right"><span class="tag tag-accent">3×10–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Time under tension.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Cable Fly / Crossover</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Chest adduction — squeeze hard at peak contraction. Fills the inner chest gap that pressing alone misses.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Dips (Weighted if possible)</span></div><div class="ex-right"><span class="tag tag-accent">3×8–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Lean forward for chest bias. Home bar on busy days.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">⟷ DB Lateral Raises</span></div><div class="ex-right"><span class="tag tag-accent">4×12–15</span><span class="ex-rest">—</span></div></div><div class="ex-note">SUPERSET with face pulls. 2 strict sets, 2 with slight cheat on last reps. Go straight into face pulls, rest after the pair.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">06</span><span class="ex-name">⟷ Face Pulls</span></div><div class="ex-right"><span class="tag tag-accent">2×15–20</span><span class="ex-rest">60s</span></div></div><div class="ex-note">SUPERSET with lateral raises. External rotation at top. Rest 60s after each pair.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">07</span><span class="ex-name">Overhead Tricep Extension</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Long head focus.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Tue — Lower A (Quad Emphasis)</div><div class="day-tag">Quads · Glutes · Calves</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Barbell Back Squat</span></div><div class="ex-right"><span class="tag tag-accent">4×6–8</span><span class="ex-rest">150s</span></div></div><div class="ex-note">RPE 8. Add 2.5–5kg/week.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Hack Squat or Leg Press</span></div><div class="ex-right"><span class="tag tag-accent">3×10–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">High/narrow feet for quad bias.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Walking Lunges (Loaded)</span></div><div class="ex-right"><span class="tag tag-accent">3×10/leg</span><span class="ex-rest">75s</span></div></div><div class="ex-note">Short step = more quad.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Leg Extension + Drop Set</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Last set: hit failure → drop 30% → failure again.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Seated Calf Raises</span></div><div class="ex-right"><span class="tag tag-accent">4×12–15</span><span class="ex-rest">45s</span></div></div><div class="ex-note">3s eccentric.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Thu — Upper B (Pull Strength + Hypertrophy)</div><div class="day-tag">Back · Biceps · Rear Delts</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Weighted Pull-Ups or BB Row</span></div><div class="ex-right"><span class="tag tag-accent">4×6–8</span><span class="ex-rest">120s</span></div></div><div class="ex-note">Add weight when you hit 8.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Chest-Supported Row</span></div><div class="ex-right"><span class="tag tag-accent">3×10–12</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Eliminates low back fatigue.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Straight-Arm Lat Pulldown</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Lat isolation. Stretch and squeeze.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">⟷ Barbell or EZ Curl</span></div><div class="ex-right"><span class="tag tag-accent">3×8–10</span><span class="ex-rest">—</span></div></div><div class="ex-note">SUPERSET with rear delt fly. Strict form. Go straight into flys, rest after the pair.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">⟷ Rear Delt Fly (Cable)</span></div><div class="ex-right"><span class="tag tag-accent">3×15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">SUPERSET with curls. Rest 60s after each pair.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">06</span><span class="ex-name">Hammer Curls</span></div><div class="ex-right"><span class="tag tag-accent">3×10–12</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Brachialis = arm width. Standalone set.</div></div>
+        </div>
+      </div>
+
+      <div class="day-card">
+        <div class="day-header" onclick="toggleDay(this)">
+          <div><div class="day-title">Fri — Lower B (Posterior Chain + Glutes)</div><div class="day-tag">Hamstrings · Glutes · Core</div></div>
+          <span class="day-chevron">⌄</span>
+        </div>
+        <div class="day-body">
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">01</span><span class="ex-name">Romanian Deadlift</span></div><div class="ex-right"><span class="tag tag-accent">4×8–10</span><span class="ex-rest">120s</span></div></div><div class="ex-note">Progressive overload. Drive hips forward.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">02</span><span class="ex-name">Hip Thrust (Heavy)</span></div><div class="ex-right"><span class="tag tag-accent">4×8–10</span><span class="ex-rest">90s</span></div></div><div class="ex-note">Load it. Glute builder #1.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">03</span><span class="ex-name">Nordic Curl or Lying Leg Curl</span></div><div class="ex-right"><span class="tag tag-accent">3×8–12</span><span class="ex-rest">75s</span></div></div><div class="ex-note">Nordics if you can manage eccentrics.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">04</span><span class="ex-name">Cable Pull-Through</span></div><div class="ex-right"><span class="tag tag-accent">3×12–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Constant tension hinge.</div></div>
+          <div class="ex-row" onclick="toggleEx(this,event)"><div class="ex-main"><div class="ex-left"><span class="ex-num">05</span><span class="ex-name">Ab Wheel or Hanging Leg Raises</span></div><div class="ex-right"><span class="tag tag-accent">3×10–15</span><span class="ex-rest">60s</span></div></div><div class="ex-note">Alternate. Home bar for HLR.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="weekly-box">
+      <span class="weekly-label">WEEKLY LAYOUT</span>
+      <div style="margin-top:6px">Mon → Upper A &nbsp;|&nbsp; Tue → Lower A &nbsp;|&nbsp; Wed → Rest &nbsp;|&nbsp; Thu → Upper B &nbsp;|&nbsp; Fri → Lower B &nbsp;|&nbsp; Sat/Sun → Rest</div>
+    </div>
+  </div>
+
+  <!-- ═══ MEALS ═══ -->
+  <div id="tab-meals" class="tab-content">
+    <div class="targets-box">
+      <div class="targets-title">Daily Targets</div>
+      <div class="targets-body">
+        <div><span class="targets-label">Calories:</span> ~2,400–2,600 kcal (recomp) → ~2,000–2,200 kcal (cut phase)</div>
+        <div><span class="targets-label-green">Protein:</span> 160–176g daily (2–2.2g/kg)</div>
+        <div class="targets-breakdown">Pre-workout ~35g P | Post-workout ~45g P | Dinner ~50g P | Snack ~25g P</div>
+      </div>
+    </div>
+
+    <div class="timing-box">
+      <span class="timing-label">DAILY TIMING</span>
+      <div style="margin-top:6px">
+        <div>☕ No breakfast (fasted until pre-workout)</div>
+        <div>🍽 Pre-workout: 10:30–11:00 AM (1–1.5hrs before gym)</div>
+        <div>🏋️ Gym: 12:00 – 1:00</div>
+        <div>🥩 Post-workout: 1:30–2:00 PM (within 45 min of finishing)</div>
+        <div>🍳 Dinner: 7:00–8:30 PM (with your partner)</div>
+      </div>
+    </div>
+
+    <!-- Pre-workout -->
+    <div class="section-header"><div class="section-title">Pre-Workout (10:30–11:00)</div><div class="section-sub">You skip breakfast, so this is your first meal. Needs to be fast to digest, high protein + moderate carbs, low fat so it doesn't sit heavy during training.</div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Greek Yoghurt Bowl</span><span class="tag tag-green">~30g</span></div><div class="meal-detail"><div class="meal-desc">200g Greek yoghurt + 40g oats + banana + drizzle of honey</div><div class="meal-sauce">↳ Honey + cinnamon</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Chicken & Rice Wrap</span><span class="tag tag-green">~35g</span></div><div class="meal-detail"><div class="meal-desc">Tortilla + 120g pre-cooked chicken + 80g white rice + sriracha</div><div class="meal-sauce">↳ Sriracha or sweet chili</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Tuna Rice Cakes</span><span class="tag tag-green">~32g</span></div><div class="meal-detail"><div class="meal-desc">Can of tuna (drained) on 4 rice cakes + light mayo + everything bagel seasoning</div><div class="meal-sauce">↳ Light mayo + lemon juice</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Egg & Toast Stack</span><span class="tag tag-green">~28g</span></div><div class="meal-detail"><div class="meal-desc">3 whole eggs scrambled + 2 slices sourdough + hot sauce</div><div class="meal-sauce">↳ Hot sauce or pesto</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Protein Shake + Banana</span><span class="tag tag-green">~35g</span></div><div class="meal-detail"><div class="meal-desc">40g whey in water/milk + banana — fastest option for rushed days</div><div class="meal-sauce">↳ n/a</div></div></div>
+
+    <!-- Post-workout -->
+    <div class="section-header"><div class="section-title">Post-Workout (1:30–2:00)</div><div class="section-sub">Biggest protein hit of the day. Higher carbs to replenish glycogen. This is your main lunch — meal prep on Sunday for the week.</div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Teriyaki Chicken Bowl</span><span class="tag tag-green">~48g</span></div><div class="meal-detail"><div class="meal-desc">180g chicken thigh + 150g jasmine rice + broccoli + edamame</div><div class="meal-sauce">↳ Soy + mirin + ginger + garlic (homemade teriyaki)</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Beef Mince & Sweet Potato</span><span class="tag tag-green">~45g</span></div><div class="meal-detail"><div class="meal-desc">180g lean beef mince + 200g roasted sweet potato + spinach + cherry tomatoes</div><div class="meal-sauce">↳ Cumin + smoked paprika + lime crema (Greek yoghurt + lime)</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Salmon & Couscous</span><span class="tag tag-green">~42g</span></div><div class="meal-detail"><div class="meal-desc">150g salmon fillet + 120g couscous + roasted Mediterranean veg (peppers, courgette, red onion)</div><div class="meal-sauce">↳ Olive oil + lemon + dried oregano + garlic</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Turkey Burrito Bowl</span><span class="tag tag-green">~50g</span></div><div class="meal-detail"><div class="meal-desc">180g turkey mince + black beans + rice + avocado + corn</div><div class="meal-sauce">↳ Chipotle in adobo + lime + coriander</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Chicken Stir-Fry</span><span class="tag tag-green">~46g</span></div><div class="meal-detail"><div class="meal-desc">180g chicken breast + egg noodles + pak choi + mushrooms + peppers</div><div class="meal-sauce">↳ Soy + sesame oil + chili flakes + ginger</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Lamb Kofta Plate</span><span class="tag tag-green">~44g</span></div><div class="meal-detail"><div class="meal-desc">180g lamb mince kofta + 150g bulgur wheat + cucumber + tomato + red onion</div><div class="meal-sauce">↳ Tahini dressing (tahini + lemon + garlic + water)</div></div></div>
+
+    <!-- Dinner -->
+    <div class="section-header"><div class="section-title">Dinner (with partner · 7:00–8:30)</div><div class="section-sub">Shared meals. High protein, moderate carbs, proper flavour. Designed as normal dinners — not gym bro food — so your partner enjoys them too.</div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Chicken Thigh Traybake</span><span class="tag tag-green">~50g</span></div><div class="meal-detail"><div class="meal-desc">Bone-in chicken thighs + roasted potatoes + peppers + red onion + cherry tomatoes</div><div class="meal-sauce">↳ Olive oil + smoked paprika + garlic + lemon zest</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Prawn & Chorizo Paella</span><span class="tag tag-green">~45g</span></div><div class="meal-detail"><div class="meal-desc">200g prawns + 50g chorizo + paella rice + peas + lemon</div><div class="meal-sauce">↳ Saffron (or turmeric) + smoked paprika + fish stock</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Steak & Roasted Veg</span><span class="tag tag-green">~52g</span></div><div class="meal-detail"><div class="meal-desc">200g sirloin or rump + roasted broccoli + sweet potato wedges</div><div class="meal-sauce">↳ Garlic butter (butter + garlic + parsley) or chimichurri</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Thai Basil Chicken (Pad Krapow)</span><span class="tag tag-green">~48g</span></div><div class="meal-detail"><div class="meal-desc">200g chicken mince + Thai basil + green beans + jasmine rice + fried egg on top</div><div class="meal-sauce">↳ Soy + oyster sauce + fish sauce + chili + garlic</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Salmon Teriyaki with Sesame Greens</span><span class="tag tag-green">~44g</span></div><div class="meal-detail"><div class="meal-desc">180g salmon + steamed rice + tenderstem broccoli + edamame</div><div class="meal-sauce">↳ Soy + mirin + honey + sesame seeds</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">One-Pot Chicken & Chorizo Stew</span><span class="tag tag-green">~48g</span></div><div class="meal-detail"><div class="meal-desc">Chicken thigh + 50g chorizo + butter beans + spinach + tinned tomatoes</div><div class="meal-sauce">↳ Smoked paprika + garlic + onion + chicken stock</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Homemade Beef Burgers</span><span class="tag tag-green">~50g</span></div><div class="meal-detail"><div class="meal-desc">2× 100g lean beef patties + brioche bun + lettuce + tomato + pickles + cheese</div><div class="meal-sauce">↳ Burger sauce (mayo + ketchup + mustard + gherkin relish)</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Mediterranean Baked Fish</span><span class="tag tag-green">~42g</span></div><div class="meal-detail"><div class="meal-desc">White fish fillet (cod/sea bass) + cherry tomatoes + olives + capers + new potatoes</div><div class="meal-sauce">↳ Olive oil + lemon + garlic + fresh herbs</div></div></div>
+
+    <!-- Snack -->
+    <div class="section-header"><div class="section-title">Evening Snack (if needed for protein target)</div><div class="section-sub">Only eat these if you're under ~150g protein for the day. Quick, no-cook options.</div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Cottage Cheese + Berries</span><span class="tag tag-green">~24g</span></div><div class="meal-detail"><div class="meal-desc">200g cottage cheese + handful of berries</div><div class="meal-sauce">↳ Honey drizzle</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Protein Shake</span><span class="tag tag-green">~30g</span></div><div class="meal-detail"><div class="meal-desc">30g whey + 200ml milk</div><div class="meal-sauce">↳ n/a</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Beef or Turkey Jerky</span><span class="tag tag-green">~25g</span></div><div class="meal-detail"><div class="meal-desc">75g jerky</div><div class="meal-sauce">↳ n/a</div></div></div>
+    <div class="meal-card" onclick="toggleMeal(this)"><div class="meal-main"><span class="meal-name">Boiled Eggs + Hummus</span><span class="tag tag-green">~22g</span></div><div class="meal-detail"><div class="meal-desc">3 boiled eggs + 40g hummus + carrot sticks</div><div class="meal-sauce">↳ Everything bagel seasoning on the hummus</div></div></div>
+  </div>
+
+  <!-- ═══ PREP ═══ -->
+  <div id="tab-prep" class="tab-content">
+    <div class="section-header"><div class="section-title">Meal Prep System</div><div class="section-sub">Make the food side effortless so you can focus on training</div></div>
+    <div class="list-item"><span class="list-num list-num-accent">01</span><span>Sunday meal prep: batch cook 2 post-workout options for the week (e.g., teriyaki chicken + turkey burrito bowl). Split into 5 containers.</span></div>
+    <div class="list-item"><span class="list-num list-num-accent">02</span><span>Pre-workout meals should take &lt;5 min to assemble. Keep wraps, rice cakes, tuna, eggs, and yoghurt stocked.</span></div>
+    <div class="list-item"><span class="list-num list-num-accent">03</span><span>Dinners are cooked fresh since you're eating with your partner. Most take 25–35 min.</span></div>
+    <div class="list-item"><span class="list-num list-num-accent">04</span><span>Buy sauces in bulk: soy sauce, sriracha, sesame oil, tahini, chipotle in adobo, fish sauce. These rotate across everything.</span></div>
+
+    <div class="section-header"><div class="section-title">Rest Day Options</div><div class="section-sub">Pick 1–2 per rest day. Recovery is where growth happens.</div></div>
+    <div class="list-item"><span class="list-num list-num-green">01</span><span>Light 20–30 min walk or cycle (active recovery, LISS)</span></div>
+    <div class="list-item"><span class="list-num list-num-green">02</span><span>Mobility work / foam rolling — hips, thoracic spine, shoulders</span></div>
+    <div class="list-item"><span class="list-num list-num-green">03</span><span>Heavy bag — 20 min max, don't turn it into HIIT during recomp</span></div>
+    <div class="list-item"><span class="list-num list-num-green">04</span><span>GTG pull-ups on garden bar — 50% of max reps, spread through the day</span></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="footer-label">REMEMBER</span> — Recomp works because you're a detrained lifter with muscle memory and elevated body fat. Eat at maintenance, hit 160g+ protein daily, train 4×/week, sleep 7–8 hrs. After week 12 reassess: if above 18% BF, transition to a cut with one refeed day per week at maintenance calories (extra carbs, not fat). If already seeing definition, keep recomping.
+  </div>
+</div>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function switchPhase(id) {
+  document.querySelectorAll('.phase-content').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('phase-' + id).style.display = 'block';
+  document.getElementById(id + '-btn').classList.add('active');
+}
+
+function toggleDay(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.day-chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+  header.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+function toggleEx(row, e) {
+  e.stopPropagation();
+  const note = row.querySelector('.ex-note');
+  row.classList.toggle('open');
+  note.classList.toggle('open');
+}
+
+function toggleMeal(card) {
+  const detail = card.querySelector('.meal-detail');
+  card.classList.toggle('open');
+  detail.classList.toggle('open');
+}
+</script>
+</body>
+</html>
